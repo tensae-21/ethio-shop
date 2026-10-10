@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 
 const Products = ({ onAddToCart }) => {
@@ -11,6 +11,7 @@ const Products = ({ onAddToCart }) => {
   // Active category & sub-item state (defaults to 'women' / 'Dresses')
   const activeCategory = searchParams.get('category') || 'women';
   const activeItem = searchParams.get('item') || 'Dresses';
+  const searchTerm = (searchParams.get('search') || '').trim().toLowerCase();
 
   // Price Range Filter State
   const [selectedPriceRange, setSelectedPriceRange] = useState('all');
@@ -172,13 +173,26 @@ const Products = ({ onAddToCart }) => {
   };
 
   // Filter products based on active category, active sub-item, and price range
-  const currentCategoryList = categoryData[activeCategory.toLowerCase()] || categoryData.women;
   const activeRangeObj = priceRanges.find((r) => r.id === selectedPriceRange) || priceRanges[0];
+  const categorySearchTerms = {
+    men: "men men's mens male clothing clothes",
+    women: "women women's womens female clothing clothes",
+    kids: "kid kids kid's kids' children clothing clothes",
+    accessories: 'accessory accessories',
+  };
+  const currentCategoryList = searchTerm
+    ? Object.entries(categoryData).flatMap(([category, products]) =>
+        products.map((product) => ({ ...product, category }))
+      )
+    : categoryData[activeCategory.toLowerCase()] || categoryData.women;
 
   const filteredProducts = currentCategoryList.filter((prod) => {
-    const matchesItem = prod.item.toLowerCase() === activeItem.toLowerCase();
+    const category = prod.category || activeCategory;
+    const searchableText = `${prod.desc} ${prod.item} ${category} ${categorySearchTerms[category] || ''}`.toLowerCase();
+    const matchesSearch = !searchTerm || searchableText.includes(searchTerm);
+    const matchesItem = searchTerm || prod.item.toLowerCase() === activeItem.toLowerCase();
     const matchesPrice = prod.price >= activeRangeObj.min && prod.price <= activeRangeObj.max;
-    return matchesItem && matchesPrice;
+    return matchesSearch && matchesItem && matchesPrice;
   });
 
   const handleSubItemClick = (categoryKey, itemLabel) => {
@@ -230,12 +244,20 @@ const Products = ({ onAddToCart }) => {
               <Link to="/" className="text-decoration-none text-gold">Home</Link>
             </li>
             <li className="breadcrumb-item text-dark">Products</li>
-            <li className="breadcrumb-item text-capitalize text-dark">
-              {activeCategory}
-            </li>
-            <li className="breadcrumb-item active text-dark" aria-current="page">
-              {activeItem}
-            </li>
+            {searchTerm ? (
+              <li className="breadcrumb-item active text-dark" aria-current="page">
+                Search: {searchParams.get('search')}
+              </li>
+            ) : (
+              <>
+                <li className="breadcrumb-item text-capitalize text-dark">
+                  {activeCategory}
+                </li>
+                <li className="breadcrumb-item active text-dark" aria-current="page">
+                  {activeItem}
+                </li>
+              </>
+            )}
           </ol>
         </nav>
       </div>
@@ -374,45 +396,34 @@ const Products = ({ onAddToCart }) => {
                           e.target.src = 'https://via.placeholder.com/220x220?text=Product+Image';
                         }}
                       />
+                      <button
+                        type="button"
+                        className="product-cart-button"
+                        aria-label={`Add ${product.desc} to cart`}
+                        title="Add to cart"
+                        onClick={(e) => handleAddToCartClick(e, product)}
+                      >
+                        <img src="/images/cart.png" alt="" aria-hidden="true" />
+                      </button>
                     </div>
 
                     {/* PRODUCT DETAILS */}
-                    <div className="card-body d-flex flex-column justify-content-between p-3">
-                      <div>
-                        {/* Clickable Product Description / Title */}
-                        <h6 
-                          className="text-dark mb-2 cursor-pointer product-title-hover" 
-                          style={{ fontSize: '0.95rem', lineHeight: '1.3', minHeight: '38px', color: '#1a1a1a', cursor: 'pointer' }}
-                          onClick={() => handleProductClick(product)}
-                        >
-                          {product.desc}
-                        </h6>
-                      </div>
-
-                      {/* PRICE AND 'ADD' BUTTON SIDE BY SIDE */}
-                      <div className="d-flex align-items-center justify-content-between gap-2 mt-2 pt-2 border-top">
-                        <div className="d-flex align-items-baseline gap-1">
-                          <span className="fs-5 text-dark">{product.price.toLocaleString()}</span>
-                          <span className="text-dark small">Birr</span>
-                          {product.gram && (
-                            <span className="badge bg-light text-dark border ms-1 small">
-                              {product.gram}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* INTERCHANGED BUTTON: "Add" INSTEAD OF "Add to Cart" */}
-                        <button
-                          type="button"
-                          className="btn gold-bg text-white py-1.5 px-3 rounded-2 border-0 shadow-sm d-flex align-items-center gap-1"
-                          style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}
-                          onClick={(e) => handleAddToCartClick(e, product)}
-                        >
-                          <i className="fa-solid fa-cart-shopping"></i>
-                          <span>Add</span>
-                        </button>
-                      </div>
-
+                    <div className="card-body d-flex flex-column p-3">
+                      <p className="fw-bold fs-5 text-dark mb-1">
+                        {Number(product.price || 0).toLocaleString()} ETB
+                      </p>
+                      <h6
+                        className="text-dark mb-0 product-title-hover"
+                        style={{ fontSize: '0.95rem', lineHeight: '1.3', color: '#1a1a1a', cursor: 'pointer' }}
+                        onClick={() => handleProductClick(product)}
+                      >
+                        {product.desc}
+                      </h6>
+                      {product.gram && (
+                        <span className="badge bg-light text-dark border mt-2 align-self-start small">
+                          {product.gram}
+                        </span>
+                      )}
                     </div>
 
                   </div>
@@ -423,7 +434,9 @@ const Products = ({ onAddToCart }) => {
                 <i className="fa-solid fa-box-open fs-2 text-dark mb-2"></i>
                 <h6 className="text-dark">No products found</h6>
                 <p className="text-dark small">
-                  No items match the selected price range under "{activeItem}". Try adjusting your filters.
+                  {searchTerm
+                    ? `No products match "${searchParams.get('search')}". Try another product name or category.`
+                    : `No items match the selected price range under "${activeItem}". Try adjusting your filters.`}
                 </p>
               </div>
             )}

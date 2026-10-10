@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 // Import Layout Components
 import Navbar from './components/common/Navbar';
@@ -7,6 +7,7 @@ import Hero from './components/common/Hero';
 import Products from './components/common/Products';
 import ShopCategories from './components/common/ShopCategories';
 import Footer from './components/common/Footer';
+import ShoppingChatbot from './components/common/ShoppingChatbot';
 
 // Import Product & Checkout Components
 import ProductDetail from './components/product/ProductDetail';
@@ -17,8 +18,11 @@ import { fetchUserCart, addToCartAPI } from './services/cartService';
 // Import Pages
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Profile from './pages/Profile';
+import PaymentResult from './pages/PaymentResult';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import { hasValidSession, logout } from './services/authService';
 
 const HomePage = ({ selectedCategory, setSelectedCategory, onAddToCart }) => (
   <main>
@@ -27,6 +31,10 @@ const HomePage = ({ selectedCategory, setSelectedCategory, onAddToCart }) => (
       selectedCategory={selectedCategory} 
       setSelectedCategory={setSelectedCategory} 
       onAddToCart={onAddToCart}
+    />
+    <ShoppingChatbot
+      onAddToCart={onAddToCart}
+      onBrowseCategory={setSelectedCategory}
     />
   </main>
 );
@@ -39,7 +47,7 @@ export default function App() {
     try {
       const savedCart = localStorage.getItem('ethioshop_cart');
       return savedCart ? { items: JSON.parse(savedCart) } : { items: [] };
-    } catch (err) {
+    } catch {
       return { items: [] };
     }
   });
@@ -47,9 +55,10 @@ export default function App() {
   // Store user session state persistently across refreshes
   const [user, setUser] = useState(() => {
     try {
+      if (!hasValidSession()) return null;
       const savedUser = localStorage.getItem('app_user') || localStorage.getItem('user');
       return savedUser ? JSON.parse(savedUser) : null;
-    } catch (err) {
+    } catch {
       return null;
     }
   });
@@ -67,8 +76,8 @@ export default function App() {
         localStorage.removeItem('user');
         localStorage.removeItem('token');
       }
-    } catch (err) {
-      console.error('Failed to sync user session to localStorage', err);
+    } catch (error) {
+      console.error('Failed to sync user session to localStorage', error);
     }
   }, [user]);
 
@@ -76,8 +85,8 @@ export default function App() {
   useEffect(() => {
     try {
       localStorage.setItem('ethioshop_cart', JSON.stringify(cart.items || []));
-    } catch (err) {
-      console.error('Failed to sync cart to localStorage', err);
+    } catch (error) {
+      console.error('Failed to sync cart to localStorage', error);
     }
   }, [cart.items]);
 
@@ -90,8 +99,8 @@ export default function App() {
         if (data && data.items && isMounted) {
           setCart(data);
         }
-      } catch (err) {
-        console.warn('Backend offline, using local cart state.');
+      } catch (error) {
+        console.warn('Unable to fetch the backend cart; using local cart state.', error);
       }
     }
     loadCart();
@@ -109,8 +118,8 @@ export default function App() {
         setCart(updatedCart);
         return;
       }
-    } catch (err) {
-      console.warn('Backend update failed, using local update.');
+    } catch (error) {
+      console.warn('Backend cart update failed; using local update.', error);
     }
 
     // Immutable Local Cart Update
@@ -176,13 +185,14 @@ export default function App() {
   };
 
   // Clear Cart Handler
-  const handleClearCart = () => {
+  const handleClearCart = useCallback(() => {
     setCart({ items: [] });
     localStorage.removeItem('ethioshop_cart');
-  };
+  }, []);
 
   // Logout Handler
   const handleLogout = () => {
+    logout();
     setUser(null);
   };
 
@@ -247,23 +257,31 @@ export default function App() {
 
           <Route 
             path="/checkout" 
-            element={
-              <Checkout 
-                cartItems={cartItems} 
-                user={user} 
-                onClearCart={handleClearCart} 
-              />
-            } 
+            element={hasValidSession()
+              ? <Checkout cartItems={cartItems} user={user} />
+              : <Navigate to="/login" replace />}
+          />
+
+          <Route
+            path="/payment/result"
+            element={hasValidSession()
+              ? <PaymentResult onClearCart={handleClearCart} />
+              : <Navigate to="/login" replace />}
           />
 
           <Route 
             path="/register" 
-            element={<Register onLoginSuccess={handleLoginSuccess} setUser={setUser} />} 
+            element={<Register />}
           />
 
           <Route 
             path="/login" 
-            element={<Login onLoginSuccess={handleLoginSuccess} setUser={setUser} />} 
+            element={<Login onLoginSuccess={handleLoginSuccess} />}
+          />
+
+          <Route
+            path="/profile"
+            element={<Profile user={user} onLogout={handleLogout} />}
           />
 
           <Route 

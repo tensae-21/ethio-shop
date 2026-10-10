@@ -1,0 +1,32 @@
+.product-cart-button {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background-color: #e7f1ff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.product-cart-button:hover {
+  background-color: #d0e4ff;
+}
+
+.product-cart-button:focus-visible {
+  outline: 3px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+.product-cart-button img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}

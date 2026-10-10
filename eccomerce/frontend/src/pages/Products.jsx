@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "../components/product/ProductCard";
 import ProductFilter from "../components/product/ProductFilter";
 import { products } from "../data/products";
 
-export default function Products() {
+export default function Products({ onAddToCart }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryFromUrl = searchParams.get("category");
   const [selectedCategory, setSelectedCategory] = useState(
@@ -47,7 +47,7 @@ export default function Products() {
           {filteredProducts &&
             filteredProducts.map((item) => (
               <div key={item.id} className="col-12 col-sm-6 col-md-4 col-lg-3">
-                <ProductCard product={item} />
+                <ProductCard product={item} onAddToCart={onAddToCart} />
               </div>
             ))}
         </div>

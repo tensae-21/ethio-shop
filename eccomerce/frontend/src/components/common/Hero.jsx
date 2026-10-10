@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Headset, ShieldCheck, Tags } from 'lucide-react';
 
 const customHeroStyles = `
   /* Left Category Hover Interactions */
@@ -373,15 +374,22 @@ const Hero = ({ onSelectCategory }) => {
                 <span className="badge bg-danger px-3 py-1 rounded-pill fw-semibold mb-2" style={{ fontSize: '0.75rem' }}>
                   Official Store
                 </span>
-                <h3 className="fw-bold text-dark fs-5 mb-2">
-                  Welcome to Online Shopping
-                </h3>
+                <div className="d-flex align-items-center gap-2 mb-2">
+                  <img
+                    src="/images/logo.png"
+                    alt="Ethio Shop logo"
+                    style={{ width: 42, height: 42, objectFit: 'contain' }}
+                  />
+                  <h3 className="fw-bold text-dark fs-5 mb-0">
+                    Welcome to Ethio Shop
+                  </h3>
+                </div>
               </div>
 
               <div className="d-flex flex-column gap-2 my-1">
                 <div className="feature-item-card d-flex align-items-center gap-3">
                   <div className="feature-icon-wrapper" style={{ backgroundColor: '#e7f1ff', color: '#0d6efd' }}>
-                    <i className="fa-solid fa-headset fs-6"></i>
+                    <Headset size={19} aria-hidden="true" />
                   </div>
                   <div>
                     <h6 className="fw-bold text-dark mb-0" style={{ fontSize: '0.82rem' }}>Customer Service</h6>
@@ -392,8 +400,8 @@ const Hero = ({ onSelectCategory }) => {
                 </div>
 
                 <div className="feature-item-card d-flex align-items-center gap-3">
-                  <div className="feature-icon-wrapper" style={{ backgroundColor: '#fff3cd', color: '#ffc107' }}>
-                    <i className="fa-solid fa-tags fs-6"></i>
+                  <div className="feature-icon-wrapper" style={{ backgroundColor: '#fff3cd', color: '#b58100' }}>
+                    <Tags size={19} aria-hidden="true" />
                   </div>
                   <div>
                     <h6 className="fw-bold text-dark mb-0" style={{ fontSize: '0.82rem' }}>Fair Price</h6>
@@ -405,7 +413,7 @@ const Hero = ({ onSelectCategory }) => {
 
                 <div className="feature-item-card d-flex align-items-center gap-3">
                   <div className="feature-icon-wrapper" style={{ backgroundColor: '#d1e7dd', color: '#198754' }}>
-                    <i className="fa-solid fa-shield-halved fs-6"></i>
+                    <ShieldCheck size={19} aria-hidden="true" />
                   </div>
                   <div>
                     <h6 className="fw-bold text-dark mb-0" style={{ fontSize: '0.82rem' }}>Quality Product</h6>

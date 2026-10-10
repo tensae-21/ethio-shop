@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faArrowLeft, 
@@ -10,21 +10,20 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-export default function Checkout({ cartItems = [], user, onClearCart }) {
-  const navigate = useNavigate();
+export default function Checkout({ cartItems = [], user }) {
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Form State
   const [formData, setFormData] = useState({
-    fullName: user?.name || '',
+    fullName: user?.fullName || user?.name || '',
     email: user?.email || '',
-    phone: '',
+    phone: user?.phoneNumber || '',
     address: '',
     city: 'Addis Ababa',
     subcity: '',
     woreda: '',
     deliveryNotes: '',
-    paymentMethod: 'telebirr'
   });
 
   // Calculate Totals
@@ -45,39 +44,33 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
     if (safeCartItems.length === 0) {
-      alert('Your cart is empty.');
+      setErrorMessage('Your cart is empty.');
       return;
     }
 
+    setErrorMessage('');
     setLoading(true);
-
-    const orderPayload = {
-      userId: user?.email || localStorage.getItem('app_user') || 'GUEST',
-      items: safeCartItems,
-      shippingAddress: { ...formData },
-      pricing: { subtotal, shipping, discount, grandTotal }
-    };
 
     try {
       const response = await fetch(`${API_BASE_URL}/orders`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderPayload)
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+        },
+        body: JSON.stringify({ ...formData, items: safeCartItems }),
       });
 
       const data = await response.json();
 
-      if (response.ok) {
-        if (onClearCart) onClearCart();
-        alert('Order placed successfully!');
-        navigate('/');
-      } else {
-        alert(data.message || 'Failed to place order.');
+      if (!response.ok || !data.checkoutUrl) {
+        throw new Error(data.message || 'Could not start Chapa checkout.');
       }
+
+      window.location.assign(data.checkoutUrl);
     } catch (err) {
       console.error('Order submission error:', err);
-      alert('Network error. Unable to process order.');
-    } finally {
+      setErrorMessage(err.message || 'Network error. Unable to process your order.');
       setLoading(false);
     }
   };
@@ -94,6 +87,11 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
       </div>
 
       <form onSubmit={handleSubmitOrder}>
+        {errorMessage && (
+          <div className="alert alert-danger" role="alert">
+            {errorMessage}
+          </div>
+        )}
         <div className="row g-4">
           
           {/* Shipping Details */}
@@ -205,51 +203,14 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
               </div>
             </div>
 
-            {/* Payment Method Selection */}
+            {/* Chapa is the only supported payment option */}
             <div className="card border-0 rounded-4 shadow-sm bg-white p-4">
               <h5 className="fw-bold text-dark mb-3">2. Payment Method</h5>
-              
-              <div className="row g-3">
-                <div className="col-md-4">
-                  <label className={`card p-3 border rounded-3 cursor-pointer text-center ${formData.paymentMethod === 'telebirr' ? 'border-warning bg-light' : ''}`}>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="telebirr"
-                      checked={formData.paymentMethod === 'telebirr'}
-                      onChange={handleChange}
-                      className="form-check-input mb-2 mx-auto"
-                    />
-                    <span className="fw-bold d-block text-dark">Telebirr</span>
-                  </label>
-                </div>
-
-                <div className="col-md-4">
-                  <label className={`card p-3 border rounded-3 cursor-pointer text-center ${formData.paymentMethod === 'cbe' ? 'border-warning bg-light' : ''}`}>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="cbe"
-                      checked={formData.paymentMethod === 'cbe'}
-                      onChange={handleChange}
-                      className="form-check-input mb-2 mx-auto"
-                    />
-                    <span className="fw-bold d-block text-dark">CBE Birr</span>
-                  </label>
-                </div>
-
-                <div className="col-md-4">
-                  <label className={`card p-3 border rounded-3 cursor-pointer text-center ${formData.paymentMethod === 'cod' ? 'border-warning bg-light' : ''}`}>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="cod"
-                      checked={formData.paymentMethod === 'cod'}
-                      onChange={handleChange}
-                      className="form-check-input mb-2 mx-auto"
-                    />
-                    <span className="fw-bold d-block text-dark">Cash on Delivery</span>
-                  </label>
+              <div className="border border-warning rounded-3 p-3 d-flex align-items-center gap-3 bg-light">
+                <span className="badge text-bg-dark fs-6">Chapa</span>
+                <div>
+                  <p className="fw-bold mb-1">Secure online payment</p>
+                  <p className="small text-muted mb-0">You will be redirected to Chapa to complete payment securely.</p>
                 </div>
               </div>
             </div>

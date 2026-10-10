@@ -7,7 +7,7 @@ const protect = async (req, res, next) => {
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ethioshop_secret_key_123');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Attach user object to request, omitting passwordHash
       req.user = await User.findById(decoded.id).select('-passwordHash');

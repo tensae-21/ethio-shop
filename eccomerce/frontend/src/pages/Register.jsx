@@ -1,10 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Truck } from 'lucide-react';
+import { register } from '../services/authService';
 
 const sharedAuthStyles = `
   .login-page-container {
-    background-color: #f8f9fa;
-    min-height: 100vh;
+    background-color: #ffc107;
+    min-height: 76vh;
+  }
+
+  .auth-layout {
+    max-width: 1040px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 440px minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(2rem, 6vw, 5rem);
+    padding: 2rem;
+  }
+
+  .auth-welcome { color: #212529; grid-column: 2; grid-row: 1; }
+  .auth-card-professional { grid-column: 1; grid-row: 1; }
+  .auth-welcome-icon {
+    width: 154px;
+    height: 154px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #fff;
+    color: #d99a00;
+    font-size: 4.5rem;
+    box-shadow: 0 12px 30px rgba(70, 48, 0, .14);
+  }
+  .auth-welcome h1 { font-size: clamp(2rem, 4vw, 3.25rem); font-weight: 800; }
+  .auth-welcome p { max-width: 430px; font-size: 1.1rem; }
+
+  @media (max-width: 767.98px) {
+    .auth-layout { grid-template-columns: 1fr; gap: 1.5rem; padding: 1rem; max-width: 520px; }
+    .auth-card-professional { grid-column: 1; grid-row: 1; }
+    .auth-welcome { grid-column: 1; grid-row: 2; }
+    .auth-welcome { text-align: center; }
+    .auth-welcome-icon { width: 112px; height: 112px; font-size: 3.3rem; }
+    .auth-welcome p { margin-inline: auto; margin-bottom: 0; }
   }
 
   .auth-card-professional {
@@ -13,7 +51,7 @@ const sharedAuthStyles = `
     border-radius: 10px;
     border: none !important;
     background: #ffffff;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 15px 45px rgba(70, 48, 0, .16);
   }
 
   .btn-yellow-continue {
@@ -91,7 +129,7 @@ const sharedAuthStyles = `
   }
 `;
 
-export default function Register({ setUser, onLoginSuccess }) {
+export default function Register() {
   const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
@@ -102,18 +140,6 @@ export default function Register({ setUser, onLoginSuccess }) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-
-  useEffect(() => {
-    checkServerConnection();
-  }, []);
-
-  const checkServerConnection = async () => {
-    try {
-      await fetch('http://localhost:5000/api/health');
-    } catch (error) {
-      console.warn('Backend server unreachable on mount. Offline mode enabled.');
-    }
-  };
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
@@ -129,8 +155,8 @@ export default function Register({ setUser, onLoginSuccess }) {
 
     // Email validation
     const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail.endsWith('@gmail.com')) {
-      setErrorMessage('Please enter a valid @gmail.com email address.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setErrorMessage('Please enter a valid email address.');
       return;
     }
 
@@ -149,47 +175,20 @@ export default function Register({ setUser, onLoginSuccess }) {
     const fullPhoneNumber = `+251${cleanPhone}`;
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          phoneNumber: fullPhoneNumber,
-          email: cleanEmail,
-          password: password.trim(),
-          name: cleanEmail.split('@')[0]
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccessMessage('✓ Registration successful! Redirecting to login...');
-        sessionStorage.setItem('registeredEmail', cleanEmail);
-        setTimeout(() => navigate('/login'), 1500);
-      } else {
-        setErrorMessage(data.message || 'Registration failed. Please check your information.');
-      }
-    } catch (error) {
-      console.warn('Backend server offline. Registering in local mode...');
-      
-      // Fallback Local Registration Session
-      const registeredUser = {
-        email: cleanEmail,
+      await register({
         phoneNumber: fullPhoneNumber,
-        fullName: cleanEmail.split('@')[0]
-      };
-
-      localStorage.setItem('app_user', JSON.stringify(registeredUser));
-      localStorage.setItem('user', JSON.stringify(registeredUser));
-
-      if (typeof setUser === 'function') setUser(registeredUser);
-      if (typeof onLoginSuccess === 'function') onLoginSuccess(registeredUser);
-
-      setSuccessMessage('✓ Registration successful (Local Mode). Redirecting...');
-      setTimeout(() => navigate('/login'), 1200);
+        email: cleanEmail,
+        password,
+        fullName: cleanEmail.split('@')[0],
+      });
+      setSuccessMessage('Registration successful! Please log in.');
+      sessionStorage.setItem('registeredEmail', cleanEmail);
+      setTimeout(() => navigate('/login'), 900);
+    } catch (error) {
+      setErrorMessage(
+        error.response?.data?.message ||
+          'Could not connect to the server. Please try again when the backend is available.',
+      );
     } finally {
       setLoading(false);
     }
@@ -198,8 +197,17 @@ export default function Register({ setUser, onLoginSuccess }) {
   return (
     <>
       <style>{sharedAuthStyles}</style>
-      <div className="login-page-container d-flex align-items-center justify-content-center p-3">
-        <div className="auth-card-professional rounded-3 overflow-hidden">
+      <div className="login-page-container d-flex align-items-center justify-content-center">
+        <div className="auth-layout">
+          <section className="auth-welcome">
+            <h1>Welcome to Register</h1>
+            <span className="auth-welcome-icon my-4" aria-hidden="true">
+              <Truck size={76} strokeWidth={1.8} />
+            </span>
+            <p className="mb-0">Create your Ethio Shop account and get ready to discover something you love.</p>
+          </section>
+
+          <div className="auth-card-professional rounded-3 overflow-hidden">
           
           <div className="register-header">
             <h3>Create Your Account</h3>
@@ -244,7 +252,8 @@ export default function Register({ setUser, onLoginSuccess }) {
                   <input 
                     type="email" 
                     className="form-control py-2 fs-6 px-3" 
-                    placeholder="username@gmail.com"
+                    placeholder="you@example.com"
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={loading}
@@ -333,6 +342,7 @@ export default function Register({ setUser, onLoginSuccess }) {
             </Link>
           </div>
 
+          </div>
         </div>
       </div>
     </>

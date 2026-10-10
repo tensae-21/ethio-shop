@@ -18,6 +18,11 @@ const orderSchema = new mongoose.Schema(
     },
     items: [orderItemSchema],
     totalAmount: { type: Number, required: true },
+    shippingAddress: { type: mongoose.Schema.Types.Mixed, required: true },
+    paymentMethod: { type: String, enum: ['chapa'], default: 'chapa' },
+    txRef: { type: String, unique: true, sparse: true },
+    shippingAmount: { type: Number, default: 0 },
+    discountAmount: { type: Number, default: 0 },
     status: {
       type: String,
       enum: ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],

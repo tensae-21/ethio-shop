@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Search } from 'lucide-react';
 
 const navCustomStyles = `
   .custom-navbar {
@@ -54,7 +55,7 @@ const navCustomStyles = `
   }
 `;
 
-export default function Navbar({ cartItems = [], cartItemsCount = 0, cartTotalPrice = 0 }) {
+export default function Navbar({ cartItemsCount = 0, cartTotalPrice = 0, user }) {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCountry, setSelectedCountry] = useState({ 
@@ -111,7 +112,7 @@ export default function Navbar({ cartItems = [], cartItemsCount = 0, cartTotalPr
             <form onSubmit={handleSearchSubmit} className="d-flex mx-lg-auto me-lg-3 my-2 my-lg-0 w-100" style={{ maxWidth: '480px' }}>
               <div className="input-group search-input-group bg-white align-items-center">
                 <span className="bg-white border-0 ps-3 pe-1 text-secondary">
-                  <i className="fa-solid fa-magnifying-glass fs-6"></i>
+                  <Search size={18} aria-hidden="true" />
                 </span>
                 <input 
                   type="search" 
@@ -173,11 +174,14 @@ export default function Navbar({ cartItems = [], cartItemsCount = 0, cartTotalPr
                 </ul>
               </li>
 
-              {/* Login Link */}
+              {/* Login or profile link */}
               <li className="nav-item">
-                <Link className="nav-link nav-btn-seamless d-flex align-items-center gap-2 text-dark" to="/login">
+                <Link
+                  className="nav-link nav-btn-seamless d-flex align-items-center gap-2 text-dark"
+                  to={user ? '/profile' : '/login'}
+                >
                   <img src="/images/login.png" alt="Login" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
-                  <span>Login</span>
+                  <span>{user ? 'My Account' : 'Login'}</span>
                 </Link>
               </li>
 

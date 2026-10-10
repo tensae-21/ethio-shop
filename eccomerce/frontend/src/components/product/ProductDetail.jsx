@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const productDetailStyles = `
   .product-detail-img-container {
@@ -85,6 +85,29 @@ const productDetailStyles = `
 export default function ProductDetail({ product, categoryKey, categoryTitle, onBack, onAddToCart }) {
   const [quantity, setQuantity] = useState(1);
   const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    if (!product) return;
+
+    try {
+      const viewedProducts = JSON.parse(localStorage.getItem('ethioshop_viewed_products') || '[]');
+      const productId = String(product.id || product._id || product.path || product.name);
+      const updatedProducts = [
+        {
+          id: productId,
+          name: product.name || product.title || product.desc || 'Product',
+          image: product.path || product.imageUrl || product.image || '',
+          price: Number(product.price || 0),
+          category: categoryTitle || categoryKey || '',
+          viewedAt: new Date().toISOString(),
+        },
+        ...viewedProducts.filter((item) => item.id !== productId),
+      ].slice(0, 24);
+      localStorage.setItem('ethioshop_viewed_products', JSON.stringify(updatedProducts));
+    } catch (error) {
+      console.error('Failed to save viewed product history', error);
+    }
+  }, [product, categoryKey, categoryTitle]);
 
   // Dynamic specs based on category type
   const getProductSpecs = () => {

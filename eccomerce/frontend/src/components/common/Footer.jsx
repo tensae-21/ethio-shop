@@ -1,5 +1,12 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faFacebookF,
+  faInstagram,
+  faLinkedinIn,
+  faTelegram,
+  faTiktok,
+} from '@fortawesome/free-brands-svg-icons';
 
 const footerStyles = `
   .footer-yellow {
@@ -64,6 +71,7 @@ const footerStyles = `
     transition: all 0.3s ease;
     text-decoration: none;
     font-size: 1.1rem;
+    flex: 0 0 40px;
   }
   .social-btn:hover {
     background-color: #000000;
@@ -113,19 +121,19 @@ export default function Footer() {
               {/* Social Icons */}
               <div className="d-flex gap-2 pt-1">
                 <a href="https://facebook.com" target="_blank" rel="noreferrer" className="social-btn" aria-label="Facebook">
-                  <i className="fa-brands fa-facebook-f"></i>
+                  <FontAwesomeIcon icon={faFacebookF} />
                 </a>
                 <a href="https://instagram.com" target="_blank" rel="noreferrer" className="social-btn" aria-label="Instagram">
-                  <i className="fa-brands fa-instagram"></i>
+                  <FontAwesomeIcon icon={faInstagram} />
                 </a>
                 <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="social-btn" aria-label="LinkedIn">
-                  <i className="fa-brands fa-linkedin-in"></i>
+                  <FontAwesomeIcon icon={faLinkedinIn} />
                 </a>
                 <a href="https://t.me" target="_blank" rel="noreferrer" className="social-btn" aria-label="Telegram">
-                  <i className="fa-brands fa-telegram"></i>
+                  <FontAwesomeIcon icon={faTelegram} />
                 </a>
                 <a href="https://tiktok.com" target="_blank" rel="noreferrer" className="social-btn" aria-label="TikTok">
-                  <i className="fa-brands fa-tiktok"></i>
+                  <FontAwesomeIcon icon={faTiktok} />
                 </a>
               </div>
             </div>
@@ -172,9 +180,7 @@ export default function Footer() {
             </div>
             <div className="col-md-6 text-center text-md-end">
               <span className="small me-3 text-dark fw-medium">Secure Payment Options</span>
-              <i className="fa-brands fa-cc-visa me-2 fs-5"></i>
-              <i className="fa-brands fa-cc-mastercard me-2 fs-5"></i>
-              <i className="fa-solid fa-wallet fs-5"></i>
+              <span className="badge text-bg-dark">Chapa</span>
             </div>
           </div>
 
